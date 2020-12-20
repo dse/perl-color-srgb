@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use v5.10.0;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use POSIX qw(round);
+use Color::sRGB::Util qw(:all);
+
+my @values = map { $_ / 3 } (0 .. 3);
+
+print(<<"END");
+RGB       V        L        luma     lumin    luma*    lumin*   hsp      hsp2
+-------   ------   ------   ------   ------   ------   ------   ------   ------
+END
+foreach my $r (@values) {
+    foreach my $g (@values) {
+        foreach my $b (@values) {
+            my $rr = round($r * 255);
+            my $gg = round($g * 255);
+            my $bb = round($b * 255);
+
+            my $v = (rgb2hsv($r, $g, $b))[2];
+            my $l = (rgb2hsl($r, $g, $b))[2];
+
+            my $luma = do {
+                gammaCompress(luma($r, $g, $b));
+            };
+            my $luminance = do {
+                gammaCompress(luminance($r, $g, $b));
+            };
+
+            my $luma2 = do {
+                local $Color::sRGB::Util::COEFFICIENTS_TYPE = 'jpg';
+                gammaCompress(luma($r, $g, $b));
+            };
+            my $luminance2 = do {
+                local $Color::sRGB::Util::COEFFICIENTS_TYPE = 'jpg';
+                gammaCompress(luminance($r, $g, $b));
+            };
+
+            my $hsp = do {
+                hspBrightness($r, $g, $b);
+            };
+            my $hsp2 = do {
+                local $Color::sRGB::Util::COEFFICIENTS_TYPE = 'hsp2';
+                hspBrightness($r, $g, $b);
+            };
+
+            my $diff1 = abs($hsp - $luminance2);
+            my $diff2 = abs($hsp2 - $luminance2);
+            my $cmp   = ncmp($diff1, $diff2);
+
+            printf("#%02x%02x%02x", $rr, $gg, $bb);
+            printf("   %.4f", $v);
+            printf("   %.4f", $l);
+            printf("   %.4f", $luma);
+            printf("   %.4f", $luminance);
+            printf("   %.4f", $luma2);
+            printf("   %.4f", $luminance2);
+            printf("   %.4f", $hsp);
+            printf("   %.4f", $hsp2);
+            printf("   %s", ($cmp < 0) ? '<' : ($cmp > 0) ? '>' : '=');
+            print("\n");
+        }
+    }
+}

@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use v5.10.0;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use POSIX qw(round);
+use Color::sRGB;
+use Color::sRGB::Util qw(:all);
+
+my $color = Color::sRGB->new('#ece9d8');
+my ($h, $s, $p) = $color->getHSP();
+printf("%s\n", $color->asStringHSP);
+printf("%s\n", $color->asString);
+my ($h, $s, $p) = $color->getHSP();
+$color->setHSP(undef, $s * 1, $p * 0.9);
+printf("%s\n", $color->asStringHSP);
+printf("%s\n", $color->asString);
+$color->setHSP(undef, $s * 3, $p * 0.8);
+printf("%s\n", $color->asStringHSP);
+printf("%s\n", $color->asString);
+
